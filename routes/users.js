@@ -1,4 +1,5 @@
 var express = require('express');
+const { ObjectId } = require('mongodb');
 var router = express.Router();
 
 module.exports = function (db) {
@@ -22,6 +23,18 @@ module.exports = function (db) {
       res.status(500).json({ message: error.message })
     }
   });
+
+  router.put('/:id', async function (req, res, next) {
+    try {
+      const { id } = req.params
+      const _id = new ObjectId(id)
+      const data = await User.updateOne({ _id }, { $set: req.body });
+      const user = await User.findOne({ _id })
+      res.status(200).json(user)
+    } catch (error) {
+      res.status(500).json({ message: error.message })
+    }
+  })
 
   return router;
 }
