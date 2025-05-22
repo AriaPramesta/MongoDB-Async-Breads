@@ -28,8 +28,23 @@ module.exports = function (db) {
     try {
       const { id } = req.params
       const _id = new ObjectId(id)
-      const data = await User.updateOne({ _id }, { $set: req.body });
+      await User.updateOne({ _id }, { $set: req.body });
       const user = await User.findOne({ _id })
+      res.status(200).json(user)
+    } catch (error) {
+      res.status(500).json({ message: error.message })
+    }
+  })
+
+  router.delete('/:id', async function (req, res, next) {
+    try {
+      const { id } = req.params
+      const _id = new ObjectId(id)
+      const user = await User.findOne({ _id })
+
+      if (!user) throw Error("User not exist!")
+      await User.deleteOne({ _id });
+
       res.status(200).json(user)
     } catch (error) {
       res.status(500).json({ message: error.message })
