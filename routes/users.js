@@ -12,5 +12,16 @@ module.exports = function (db) {
     }
   });
 
+  router.post('/', async function (req, res, next) {
+    try {
+      const { username, phone } = req.body
+      const data = await User.insertOne({ username, phone });
+      const user = await User.findOne({ _id: data.insertedId })
+      res.status(200).json(user)
+    } catch (error) {
+      res.status(500).json({ message: error.message })
+    }
+  });
+
   return router;
 }
