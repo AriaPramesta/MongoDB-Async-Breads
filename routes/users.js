@@ -18,7 +18,7 @@ module.exports = function (db) {
       const { username, phone } = req.body
       const data = await User.insertOne({ username, phone });
       const user = await User.findOne({ _id: data.insertedId })
-      res.status(200).json(user)
+      res.status(201).json(user)
     } catch (error) {
       res.status(500).json({ message: error.message })
     }
@@ -30,7 +30,7 @@ module.exports = function (db) {
       const _id = new ObjectId(id)
       await User.updateOne({ _id }, { $set: req.body });
       const user = await User.findOne({ _id })
-      res.status(200).json(user)
+      res.status(201).json(user)
     } catch (error) {
       res.status(500).json({ message: error.message })
     }
@@ -45,7 +45,7 @@ module.exports = function (db) {
       if (!user) throw Error("User not exist!")
       await User.deleteOne({ _id });
 
-      res.status(200).json(user)
+      res.status(201).json(user)
     } catch (error) {
       res.status(500).json({ message: error.message })
     }
