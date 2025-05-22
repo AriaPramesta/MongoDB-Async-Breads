@@ -46,8 +46,6 @@
           </div>
         </div>
 
-
-
         <table class="table table-striped">
           <thead>
             <tr>
@@ -57,17 +55,7 @@
               <th scope="col">Action</th>
             </tr>
           </thead>
-          <tbody>
-            <tr>
-              <th scope="row">1</th>
-              <td>Aria</td>
-              <td>098745365258</td>
-              <td>
-                <button type="button" class="btn btn-success p-2"><i class="fa-solid fa-pencil"></i></button>
-                <button type="button" class="btn btn-danger p-2"><i class="fa-solid fa-trash"></i></button>
-                <button type="button" class="btn btn-warning p-2"><i class="fa-solid fa-right-to-bracket"></i></button>
-              </td>
-            </tr>
+          <tbody id="table-content">
           </tbody>
         </table>
       </div>
@@ -78,6 +66,35 @@
       </div>
     </div>
   </div>
+
+  <script>
+    const loadData = async () => {
+      const response = await fetch("http://localhost:3000/users", {
+        method: "GET",
+      })
+      const users = await response.json()
+
+      let html = ''
+
+      users.forEach((user, index) => {
+        html += `
+          <tr>
+              <th scope="row">${index + 1}</th>
+              <td>${user.name}</td>
+              <td>${user.phone}</td>
+              <td>
+                <button type="button" class="btn btn-success p-2"><i class="fa-solid fa-pencil"></i></button>
+                <button type="button" class="btn btn-danger p-2"><i class="fa-solid fa-trash"></i></button>
+                <button type="button" class="btn btn-warning p-2"><i class="fa-solid fa-right-to-bracket"></i></button>
+              </td>
+          </tr>
+        `
+      });
+      document.getElementById("table-content").innerHTML = html
+    }
+
+    loadData()
+  </script>
 </body>
 
 </html>

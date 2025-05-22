@@ -15,8 +15,8 @@ module.exports = function (db) {
 
   router.post('/', async function (req, res, next) {
     try {
-      const { username, phone } = req.body
-      const data = await User.insertOne({ username, phone });
+      const { name, phone } = req.body
+      const data = await User.insertOne({ name, phone });
       const user = await User.findOne({ _id: data.insertedId })
       res.status(201).json(user)
     } catch (error) {
