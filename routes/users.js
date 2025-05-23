@@ -13,6 +13,17 @@ module.exports = function (db) {
     }
   });
 
+  router.get('/:id', async function (req, res, next) {
+    try {
+      const { id } = req.params
+      const _id = new ObjectId(id)
+      const user = await User.findOne({ _id })
+      res.status(200).json(user)
+    } catch (error) {
+      res.status(500).json({ message: error.message })
+    }
+  });
+
   router.post('/', async function (req, res, next) {
     try {
       const { name, phone } = req.body
