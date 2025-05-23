@@ -98,8 +98,27 @@
     </div>
   </div>
 
+  <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="deleteModalLabel">Delete Confirmation</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          Are you sure?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" onclick="removeData()">Save changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 
   <script>
+    let deletedId = null
 
     document.getElementById("form-user").addEventListener("submit", function (e) {
       e.preventDefault()
@@ -107,6 +126,10 @@
     })
 
     const formModal = new bootstrap.Modal('#formModal', {
+      keyboard: false
+    })
+
+    const deleteModal = new bootstrap.Modal('#deleteModal', {
       keyboard: false
     })
 
@@ -126,7 +149,7 @@
               <td>${user.phone}</td>
               <td>
                 <button type="button" class="btn btn-success p-2"><i class="fa-solid fa-pencil"></i></button>
-                <button type="button" class="btn btn-danger p-2"><i class="fa-solid fa-trash"></i></button>
+                <button type="button" class="btn btn-danger p-2" onclick="deletedData('${user._id}')"><i class="fa-solid fa-trash"></i></button>
                 <button type="button" class="btn btn-warning p-2"><i class="fa-solid fa-right-to-bracket"></i></button>
               </td>
           </tr>
@@ -150,6 +173,23 @@
       document.getElementById("phone").value = ''
       loadData()
       formModal.hide()
+    }
+
+    const deletedData = (id) => {
+      deletedId = id
+      deleteModal.show()
+    }
+
+    const removeData = async () => {
+      const response = await fetch(`http://localhost:3000/users/${deletedId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        }
+      })
+      deletedId = null
+      loadData()
+      deleteModal.hide()
     }
 
     loadData()
