@@ -60,7 +60,7 @@
         </table>
       </div>
       <div class="card-footer">
-        <button type="button" class="btn btn-primary" onclick="formModal.show()">
+        <button type="button" class="btn btn-primary" onclick="editId = null; formModal.show()">
           <i class="fa-solid fa-plus"></i>
         </button>
       </div>
@@ -119,10 +119,11 @@
 
   <script>
     let deletedId = null
+    let editId = null
 
     document.getElementById("form-user").addEventListener("submit", function (e) {
       e.preventDefault()
-      addData()
+      saveData()
     })
 
     const formModal = new bootstrap.Modal('#formModal', {
@@ -148,22 +149,37 @@
               <td>${user.name}</td>
               <td>${user.phone}</td>
               <td>
-                <button type="button" class="btn btn-success p-2"><i class="fa-solid fa-pencil"></i></button>
+                <button type="button" class="btn btn-success p-2" onclick="editData('${user._id}')"><i class="fa-solid fa-pencil"></i></button>
                 <button type="button" class="btn btn-danger p-2" onclick="deletedData('${user._id}')"><i class="fa-solid fa-trash"></i></button>
                 <button type="button" class="btn btn-warning p-2"><i class="fa-solid fa-right-to-bracket"></i></button>
-              </td>
-          </tr>
-        `
+                </td>
+                </tr>
+                `
       });
       document.getElementById("table-content").innerHTML = html
     }
 
-    const addData = async () => {
+    const editData = async (id) => {
+      editId = id
+      const response = await fetch(`http://localhost:3000/users/${editId}`, {
+        method: "GET",
+      })
+      const user = await response.json()
+      document.getElementById("name").value = user.name
+      document.getElementById("phone").value = user.phone
+      formModal.show()
+    }
+
+    const saveData = async () => {
       const name = document.getElementById("name").value
       const phone = document.getElementById("phone").value
 
-      const response = await fetch("http://localhost:3000/users", {
-        method: "POST",
+      let url = `http://localhost:3000/users`
+
+      if (editId) url = `http://localhost:3000/users/${editId}`
+
+      const response = await fetch(url, {
+        method: editId ? "PUT" : "POST",
         headers: {
           "Content-Type": "application/json",
         },
@@ -174,6 +190,7 @@
       loadData()
       formModal.hide()
     }
+
 
     const deletedData = (id) => {
       deletedId = id
