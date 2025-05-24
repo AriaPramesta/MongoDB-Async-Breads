@@ -62,5 +62,8 @@ module.exports = function (db) {
     }
   })
 
+  const todosRouter = require('./todos')(db);
+  router.use('/:userId/todos', todosRouter);
+
   return router;
 }
