@@ -3,13 +3,13 @@ const { ObjectId } = require('mongodb');
 
 module.exports = function (db) {
     const router = express.Router({ mergeParams: true });
-    const Todos = db.collection('todos');
+    const Todo = db.collection('todos');
 
     router.get('/', async (req, res, next) => {
         try {
             const userId = new ObjectId(req.params.userId);
-            const todos = await Todos.find({ userId }).toArray();
-            res.status(200).json(todos)
+            const todo = await Todo.find({ userId }).toArray();
+            res.status(200).json(todo)
         } catch (error) {
             res.status(500).json({ message: error.message })
         }
@@ -19,7 +19,7 @@ module.exports = function (db) {
         try {
             const { userId, id } = req.params;
 
-            const todo = await Todos.findOne({
+            const todo = await Todo.findOne({
                 _id: new ObjectId(id),
                 userId: new ObjectId(userId)
             });
@@ -52,8 +52,8 @@ module.exports = function (db) {
                 userId: new ObjectId(req.params.userId)
             }
 
-            const result = await Todos.insertOne(todo)
-            const insertedTodo = await Todos.findOne({ _id: result.insertedId })
+            const result = await Todo.insertOne(todo)
+            const insertedTodo = await Todo.findOne({ _id: result.insertedId })
 
             res.status(201).json(insertedTodo)
 
@@ -66,8 +66,26 @@ module.exports = function (db) {
         try {
             const { id } = req.params
             const _id = new ObjectId(id)
-            await Todos.updateOne({ _id }, { $set: req.body });
-            const todo = await Todos.findOne({ _id })
+            await Todo.updateOne({ _id }, { $set: req.body });
+            const todo = await Todo.findOne({ _id })
+
+            if (!todo) throw Error("Todo not exist!")
+
+            res.status(201).json(todo)
+        } catch (error) {
+            res.status(500).json({ message: error.message })
+        }
+    })
+
+    router.delete('/:id', async function (req, res, next) {
+        try {
+            const { id } = req.params
+            const _id = new ObjectId(id)
+            const todo = await Todo.findOne({ _id })
+
+            if (!todo) throw Error("Todo not exist!")
+            await Todo.deleteOne({ _id });
+
             res.status(201).json(todo)
         } catch (error) {
             res.status(500).json({ message: error.message })
