@@ -46,13 +46,8 @@
         </div>
 
         <table class="table table-striped">
-          <thead>
-            <tr>
-              <th scope="col">No.</th>
-              <th scope="col">Name</th>
-              <th scope="col">Phone</th>
-              <th scope="col">Action</th>
-            </tr>
+          <thead id="table-header">
+
           </thead>
           <tbody id="table-content">
           </tbody>
@@ -128,7 +123,10 @@
     let deletedId = null
     let editId = null
 
-    let params = { page: 1, pages: 1 }
+    let params = {
+      sortBy: "_id",
+      sortMode: "desc"
+    }
 
     document.getElementById("form-user").addEventListener("submit", function (e) {
       e.preventDefault()
@@ -183,7 +181,7 @@
       users.data.forEach((user, index) => {
         html += `
           <tr>
-              <th scope="row">${index + 1}</th>
+              <th scope="row">${index + users.offset + 1}</th>
               <td>${user.name}</td>
               <td>${user.phone}</td>
               <td>
@@ -195,6 +193,8 @@
                 `
       });
       document.getElementById("table-content").innerHTML = html
+
+      buildHeaderTable()
 
       params = { ...params, page: users.page, pages: users.pages }
       buildPagination()
@@ -318,6 +318,26 @@
       }
 
       document.getElementById("pagination").innerHTML = html
+    }
+
+    const sorting = (sortBy, sortMode) => {
+      params = { ...params, sortBy, sortMode }
+      loadData()
+    }
+
+    const buildHeaderTable = () => {
+      let html = ""
+
+      html += `
+        <tr>
+          <th >No.</th>
+          <th><a href="javascript:void(0)" style="text-decoration: none; color: #000;" onclick="sorting('name', '${params.sortMode === "asc" ? "desc" : "asc"}')">Name <i class="fa-solid fa-${params.sortBy == 'name' ? params.sortMode == 'asc' ? 'sort-up' : 'sort-down' : 'sort'}"></i></a></th>
+          <th><a href="javascript:void(0)" style="text-decoration: none; color: #000;" onclick="sorting('phone', '${params.sortMode === "asc" ? "desc" : "asc"}')">Phone <i class="fa-solid fa-${params.sortBy == 'phone' ? params.sortMode == 'asc' ? 'sort-up' : 'sort-down' : 'sort'}"></i></a></th>
+          <th >Action</th>
+        </tr>
+      `
+
+      document.getElementById("table-header").innerHTML = html
     }
 
     loadData()
