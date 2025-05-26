@@ -1,14 +1,45 @@
 var express = require('express');
 const { ObjectId } = require('mongodb');
+const router = express.Router({ mergeParams: true });
 
 module.exports = function (db) {
-    const router = express.Router({ mergeParams: true });
     const Todo = db.collection('todos');
 
     router.get('/', async (req, res, next) => {
         try {
+            const { title, startdate, enddate, complete, sortMode = "asc", sortBy = "deadline" } = req.query
+
+            let params = {}
+
+            if (title) {
+                params.title = new RegExp(title, "i");
+            }
+
+            if (startdate || enddate) {
+                params.deadline = {};
+                if (startdate) {
+                    params.deadline.$gte = new Date(startdate);
+                }
+                if (enddate) {
+                    const end = new Date(enddate);
+                    end.setHours(23, 59, 59, 999); // Akhir hari
+                    params.deadline.$lte = end;
+                }
+            }
+
+            if (complete === "true") {
+                params.complete = true;
+            } else if (complete === "false") {
+                params.complete = false;
+            }
+
             const userId = new ObjectId(req.params.userId);
-            const todo = await Todo.find({ userId }).toArray();
+            params.userId = userId
+
+            const sortParams = {}
+            sortParams[sortBy] = sortMode === "asc" ? 1 : -1
+
+            const todo = await Todo.find(params).sort(sortParams).toArray();
             res.status(200).json(todo)
         } catch (error) {
             res.status(500).json({ message: error.message })
