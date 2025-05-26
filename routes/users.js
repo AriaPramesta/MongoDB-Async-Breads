@@ -6,15 +6,49 @@ module.exports = function (db) {
   const User = db.collection('users');
   router.get('/', async function (req, res, next) {
     try {
-      const { search } = req.query
-      const query = search && search.trim() !== "" ? {
-        $or: [
-          { name: { $regex: search, $options: 'i' } },
-          { phone: { $regex: search, $options: 'i' } }
-        ]
-      } : {}
-      const users = await User.find(query).toArray();
-      res.status(200).json(users)
+      const { search, page = 1, sortMode = "asc", sortBy = "name", limit: limitQuery = "all" } = req.query
+
+      params = {}
+
+      if (search && search.trim() !== "") {
+        params = {
+          $or: [
+            { name: { $regex: search, $options: 'i' } },
+            { phone: { $regex: search, $options: 'i' } }
+          ]
+        }
+      }
+
+      const count = await User.countDocuments(params)
+
+      const allowedLimits = ["5", "10", "all"]
+      const isValidLimit = allowedLimits.includes(limitQuery)
+
+      const safeLimit = isValidLimit ? limitQuery : "all"
+
+      let limit
+      if (safeLimit === "all") {
+        limit = count
+      } else {
+        limit = parseInt(safeLimit)
+      }
+
+      const offset = limit * (page - 1)
+      const pages = Math.ceil(count / limit)
+
+      const sortParams = {}
+      sortParams[sortBy] = sortMode === "asc" ? 1 : -1
+
+      const users = await User.find(params).sort(sortParams).limit(limit).skip(offset).toArray();
+
+      res.status(200).json({
+        data: users,
+        total: count,
+        pages,
+        page,
+        limit,
+        offset
+      })
     } catch (error) {
       res.status(500).json({ message: error.message })
     }

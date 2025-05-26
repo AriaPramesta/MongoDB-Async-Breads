@@ -23,8 +23,8 @@
           <div style="width: 16%;">
             <div class="input-group">
               <span class="input-group-text rounded">Show</span>
-              <select class="form-select form-select-sm" aria-label="Default select example">
-                <option value="" selected>All</option>
+              <select class="form-select form-select-sm" aria-label="Default select example" name="limit">
+                <option value="all">All</option>
                 <option value="5">5</option>
                 <option value="10">10</option>
               </select>
@@ -135,6 +135,12 @@
       keyboard: false
     })
 
+    document.querySelector("select[name='limit']").addEventListener("change", function (e) {
+      const selected = e.target.value
+      params = { ...params, limit: selected }
+      loadData()
+    })
+
     const reset = () => {
       console.log("reset clicked");
       document.getElementById('query').value = ""
@@ -166,7 +172,7 @@
 
       let html = ''
 
-      users.forEach((user, index) => {
+      users.data.forEach((user, index) => {
         html += `
           <tr>
               <th scope="row">${index + 1}</th>
