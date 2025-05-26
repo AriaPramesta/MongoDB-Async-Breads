@@ -33,7 +33,9 @@ module.exports = function (db) {
         limit = parseInt(safeLimit)
       }
 
-      const offset = limit * (page - 1)
+      const currentPage = parseInt(page)
+
+      const offset = limit * (currentPage - 1)
       const pages = Math.ceil(count / limit)
 
       const sortParams = {}
@@ -45,7 +47,7 @@ module.exports = function (db) {
         data: users,
         total: count,
         pages,
-        page,
+        page: currentPage,
         limit,
         offset
       })

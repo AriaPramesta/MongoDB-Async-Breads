@@ -58,10 +58,18 @@
           </tbody>
         </table>
       </div>
-      <div class="card-footer">
+      <div class="card-footer d-flex justify-content-between align-items-center">
         <button type="button" class="btn btn-primary" onclick="editId = null; formModal.show()">
           <i class="fa-solid fa-plus"></i>
         </button>
+
+        <div class="d-flex align-items-center gap-2">
+          <div id="info" class="text-muted small d-flex align-items-center"></div>
+          <nav aria-label="Page navigation example">
+            <ul class="pagination mb-0" id="pagination"></ul>
+          </nav>
+        </div>
+
       </div>
     </div>
   </div>
@@ -120,7 +128,7 @@
     let deletedId = null
     let editId = null
 
-    let params = {}
+    let params = { page: 1, pages: 1 }
 
     document.getElementById("form-user").addEventListener("submit", function (e) {
       e.preventDefault()
@@ -187,6 +195,28 @@
                 `
       });
       document.getElementById("table-content").innerHTML = html
+
+      params = { ...params, page: users.page, pages: users.pages }
+      buildPagination()
+
+      const totalEntries = users.total;
+      const currentPage = parseInt(users.page);
+      const limitParam = users.limit;
+
+      let start = 1;
+      let end = totalEntries;
+
+      if (limitParam !== 'all') {
+        const limit = parseInt(limitParam);
+        start = (currentPage - 1) * limit + 1;
+        end = Math.min(currentPage * limit, totalEntries);
+      }
+
+      const infoText = totalEntries === 0
+        ? 'No entries to show.'
+        : `Showing ${start} to ${end} of ${totalEntries} entries`;
+
+      document.getElementById("info").textContent = infoText;
     }
 
     const editData = async (id) => {
@@ -237,6 +267,57 @@
       deletedId = null
       loadData()
       deleteModal.hide()
+    }
+
+    const prevPage = () => {
+      params = { ...params, page: params.page - 1 }
+      loadData()
+    }
+
+    const nextPage = () => {
+      params = { ...params, page: params.page + 1 }
+      loadData()
+    }
+
+    const changePage = (newPage) => {
+      params = { ...params, page: newPage }
+      loadData()
+    }
+
+    const buildPagination = () => {
+      let html = ""
+
+      if (params.page > 1) {
+        html += `
+        <li class="page-item">
+          <button class="page-link" onclick="prevPage()" aria-label="Previous">
+            <span aria-hidden="true">&laquo;</span>
+          </button>
+        </li>
+        `
+      }
+
+      for (let i = 1; i <= params.pages; i++) {
+        html += `
+          <li class="page-item${params.page == i ? ' active' : ''}">
+           <button class="page-link" onclick="changePage(${i})">
+              ${i}
+           </button>
+          </li>
+        `
+      }
+
+      if (params.page < params.pages) {
+        html += `
+          <li class="page-item">
+           <button class="page-link" onclick="nextPage()" aria-label="Next">
+              <span aria-hidden="true">&raquo;</span>
+            </button>
+          </li>
+        `
+      }
+
+      document.getElementById("pagination").innerHTML = html
     }
 
     loadData()
