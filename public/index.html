@@ -54,7 +54,7 @@
         </table>
       </div>
       <div class="card-footer d-flex justify-content-between align-items-center">
-        <button type="button" class="btn btn-primary" onclick="editId = null; formModal.show()">
+        <button type="button" class="btn btn-primary" onclick="openAddForm()">
           <i class="fa-solid fa-plus"></i>
         </button>
 
@@ -111,8 +111,8 @@
           Are you sure?
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-primary" onclick="removeData()">Save changes</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+          <button type="button" class="btn btn-primary" onclick="removeData()">Yes</button>
         </div>
       </div>
     </div>
@@ -141,11 +141,19 @@
       keyboard: false
     })
 
+
     document.querySelector("select[name='limit']").addEventListener("change", function (e) {
       const selected = e.target.value
       params = { ...params, limit: selected }
       loadData()
     })
+
+    const openAddForm = () => {
+      editId = null;
+      document.getElementById("name").value = '';
+      document.getElementById("phone").value = '';
+      formModal.show();
+    }
 
     const reset = () => {
       console.log("reset clicked");
