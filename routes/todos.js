@@ -1,13 +1,21 @@
 var express = require('express');
 const { ObjectId } = require('mongodb');
 const router = express.Router({ mergeParams: true });
+const path = require('path');
 
 module.exports = function (db) {
     const Todo = db.collection('todos');
 
     router.get('/', async (req, res, next) => {
+
+        const wantsHtml = req.accepts(['html', 'json']) === 'html';
+
+        if (wantsHtml) {
+            return res.sendFile(path.join(__dirname, '../public/todos.html'));
+        }
+
         try {
-            const { title, startdate, enddate, complete, sortMode = "asc", sortBy = "deadline" } = req.query
+            const { title, startdate, enddate, complete, sortMode = "desc", sortBy = "_id", page = 1 } = req.query
 
             let params = {}
 
@@ -36,11 +44,17 @@ module.exports = function (db) {
             const userId = new ObjectId(req.params.userId);
             params.userId = userId
 
+            const count = await Todo.countDocuments(params)
+
+            const limit = 10
+            const offset = limit * (page - 1)
+            const pages = Math.ceil(count / limit)
+
             const sortParams = {}
             sortParams[sortBy] = sortMode === "asc" ? 1 : -1
 
-            const todo = await Todo.find(params).sort(sortParams).toArray();
-            res.status(200).json(todo)
+            const todo = await Todo.find(params).limit(limit).skip(offset).sort(sortParams).toArray();
+            res.status(200).json({ data: todo, total: count, pages, page, limit })
         } catch (error) {
             res.status(500).json({ message: error.message })
         }
