@@ -15,7 +15,7 @@ module.exports = function (db) {
         }
 
         try {
-            const { title, startdate, enddate, complete, sortMode = "desc", sortBy = "_id", page = 1 } = req.query
+            const { title, startdate, enddate, complete, sortMode = "asc", sortBy = "deadline", page = 1 } = req.query
 
             let params = {}
 
@@ -30,7 +30,7 @@ module.exports = function (db) {
                 }
                 if (enddate) {
                     const end = new Date(enddate);
-                    end.setHours(23, 59, 59, 999); // Akhir hari
+                    end.setHours(23, 59, 59, 999);
                     params.deadline.$lte = end;
                 }
             }

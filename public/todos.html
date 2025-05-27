@@ -73,15 +73,25 @@
                             </select>
                         </div>
                     </div>
-                    <div class="row mb-3 d-flex align-items-center">
-                        <button type="button" class="btn btn-success col-sm-2"><i class="fa-solid fa-sort"></i> Sort by
-                            deadline</button>
-                        <div class="col-sm-10">
-                            <button type="submit" class="btn btn-info text-dark"><i
-                                    class="fa-solid fa-magnifying-glass"></i></button>
-                            <a href="/todos" class="btn btn-warning text-dark"><i class="fa-solid fa-rotate"></i></a>
+
+                    <div class="row mb-3">
+                        <div id="sort-button" class="col-auto">
+
+                        </div>
+                        <div class="col-auto">
+                            <a href="/todos"
+                                class="btn btn-warning text-dark px-3 py-2 d-flex align-items-center justify-content-center">
+                                <i class="fa-solid fa-rotate"></i>
+                            </a>
+                        </div>
+                        <div class="col-auto">
+                            <button type="submit"
+                                class="btn btn-info text-dark px-3 py-2 d-flex align-items-center justify-content-center">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                            </button>
                         </div>
                     </div>
+
                 </form>
             </div>
 
@@ -172,6 +182,11 @@
         let deletedId = null
         let editedId = null
 
+        let params = {
+            sortBy: "_id",
+            sortMode: "desc"
+        }
+
         document.getElementById("insert-form").addEventListener("submit", function (e) {
             e.preventDefault()
             saveData()
@@ -183,7 +198,8 @@
         })
 
         const loadData = async () => {
-            const url = `http://localhost:3000/users/${userId}/todos`
+            const searchParams = new URLSearchParams(params)
+            const url = `http://localhost:3000/users/${userId}/todos?${searchParams}`
 
             const response = await fetch(url, {
                 method: "GET",
@@ -216,6 +232,8 @@
                     </div>
                 `;
             });
+
+            buildSortButton()
 
             document.getElementById("table-content").innerHTML = html;
         }
@@ -288,6 +306,20 @@
             document.getElementById("deadline-edit").value = moment(todo.deadline).local().format('YYYY-MM-DDTHH:mm')
             document.getElementById("complete-edit").checked = todo.complete === true
             formModal.show()
+        }
+
+        const sorting = (sortBy, sortMode) => {
+            params = { ...params, sortBy, sortMode }
+            loadData()
+        }
+
+        const buildSortButton = () => {
+            let html = ""
+
+            html += `
+                <button type="button" class="btn btn-success px-4 d-flex align-items-center"onclick="sorting('deadline', '${params.sortMode === "asc" ? "desc" : "asc"}')"><i class="fa-solid fa-${params.sortBy == 'deadline' ? params.sortMode == 'asc' ? 'sort-up' : 'sort-down' : 'sort'} me-2"></i> Sort by deadline</button>
+            `
+            document.getElementById("sort-button").innerHTML = html
         }
 
         const formModal = new bootstrap.Modal('#formModal', {

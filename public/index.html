@@ -156,10 +156,8 @@
     }
 
     const reset = () => {
-      console.log("reset clicked");
       document.getElementById('query').value = ""
       delete params.search
-      console.log("Reset params:", params)
       loadData()
     }
 
@@ -170,7 +168,6 @@
       } else {
         params = { ...params, search: query }
       }
-      console.log("Searching params:", params)
       loadData()
     }
 
