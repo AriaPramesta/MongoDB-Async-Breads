@@ -39,71 +39,67 @@
                 <h2>Todo List</h2>
             </div>
             <div class="card-body">
-                <form>
-                    <div class="row mb-3">
-                        <label for="title" class="col-sm-2 col-form-label">Title</label>
-                        <div class="col-sm-10">
-                            <input type="text" class="form-control" id="title" name="title"
-                                placeholder="Insert your title">
+                <div class="row mb-3">
+                    <label for="search-title" class="col-sm-2 col-form-label">Title</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" id="search-title" placeholder="Insert your title">
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <label for="deadline" class="col-sm-2 col-form-label">Deadline</label>
+                    <div class="col-sm-10 d-flex justify-content-between">
+                        <div class="col-sm-5">
+                            <input type="date" class="form-control" id="search-startdate">
+                        </div>
+                        <div>
+                            s.d
+                        </div>
+                        <div class="col-sm-5">
+                            <input type="date" class="form-control" id="search-enddate">
                         </div>
                     </div>
+                </div>
 
-                    <div class="row mb-3">
-                        <label for="birthdate" class="col-sm-2 col-form-label">Deadline</label>
-                        <div class="col-sm-10 d-flex justify-content-between">
-                            <div class="col-sm-5">
-                                <input type="date" step="0.1" class="form-control" id="deadline" name="startdate">
-                            </div>
-                            <div>
-                                s.d
-                            </div>
-                            <div class="col-sm-5">
-                                <input type="date" step="0.1" class="form-control" id="deadline" name="enddate">
-                            </div>
-                        </div>
+                <div class="row mb-3">
+                    <label for="search-complete" class="col-sm-2 col-form-label">Complete</label>
+                    <div class="col-sm-10">
+                        <select class="form-select" id="search-complete">
+                            <option value="" selected>-complete-</option>
+                            <option value='true'>Done</option>
+                            <option value='false'>Not Yet</option>
+                        </select>
                     </div>
+                </div>
 
-                    <div class="row mb-3">
-                        <label for="complete" class="col-sm-2 col-form-label">Complete</label>
-                        <div class="col-sm-10">
-                            <select class="form-select" id="complete" name="complete">
-                                <option value="" selected>-complete-</option>
-                                <option value='true'>Done</option>
-                                <option value='false'>Not Yet</option>
-                            </select>
-                        </div>
+                <div class="row mb-3">
+                    <div id="sort-button" class="col-auto">
+
                     </div>
-
-                    <div class="row mb-3">
-                        <div id="sort-button" class="col-auto">
-
-                        </div>
-                        <div class="col-auto">
-                            <a href="/todos"
-                                class="btn btn-warning text-dark px-3 py-2 d-flex align-items-center justify-content-center">
-                                <i class="fa-solid fa-rotate"></i>
-                            </a>
-                        </div>
-                        <div class="col-auto">
-                            <button type="submit"
-                                class="btn btn-info text-dark px-3 py-2 d-flex align-items-center justify-content-center">
-                                <i class="fa-solid fa-magnifying-glass"></i>
-                            </button>
-                        </div>
+                    <div class="col-auto">
+                        <button type="button" onclick="reset()"
+                            class="btn btn-warning text-dark px-3 py-2 d-flex align-items-center justify-content-center">
+                            <i class="fa-solid fa-rotate"></i>
+                        </button>
                     </div>
-
-                </form>
+                    <div class="col-auto">
+                        <button type="button" onclick="searching()"
+                            class="btn btn-info text-dark px-3 py-2 d-flex align-items-center justify-content-center">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
 
-            <div class="card-footer">
-                <form id="insert-form">
+            <form id="insert-form">
+                <div class="card-footer">
                     <div class="input-group">
                         <input type="text" class="form-control" name="titleInput" id="titleInput" placeholder="title">
                         <button class="btn btn-outline-primary rounded" type="submit"><i
                                 class="fa-solid fa-circle-arrow-down"></i></button>
                     </div>
-                </form>
-            </div>
+                </div>
+            </form>
 
             <div class="mt-2 mb-2">
                 <div id="table-content">
@@ -177,7 +173,7 @@
 
     <script>
         const pathParts = window.location.pathname.split('/');
-        const userId = pathParts[2];
+        const userId = pathParts[2]
 
         let deletedId = null
         let editedId = null
@@ -197,8 +193,43 @@
             saveData()
         })
 
+        const reset = () => {
+            document.getElementById('search-title').value = ""
+            document.getElementById('search-startdate').value = ""
+            document.getElementById('search-enddate').value = ""
+            document.getElementById('search-complete').value = ""
+            delete params.title
+            delete params.startdate
+            delete params.enddate
+            delete params.complete
+
+            console.log(params)
+            loadData()
+        }
+
+        const searching = () => {
+            const title = document.getElementById('search-title').value.trim()
+            const startdate = document.getElementById('search-startdate').value
+            const enddate = document.getElementById('search-enddate').value
+            const complete = document.getElementById('search-complete').value
+
+            params = {
+                ...params, title: title, startdate: startdate, enddate: enddate, complete: complete
+            }
+
+            console.log(params)
+
+            if (!title) delete params.title
+            if (!startdate) delete params.startdate
+            if (!enddate) delete params.enddate
+            if (!complete) delete params.complete
+
+            loadData()
+        }
+
         const loadData = async () => {
             const searchParams = new URLSearchParams(params)
+            console.log(searchParams)
             const url = `http://localhost:3000/users/${userId}/todos?${searchParams}`
 
             const response = await fetch(url, {
@@ -242,7 +273,7 @@
 
             if (editedId) {
                 const title = document.getElementById("title-edit").value
-                const deadline = document.getElementById("deadline-edit").value
+                const deadline = moment(document.getElementById("deadline-edit").value).toISOString();
                 const complete = document.getElementById("complete-edit").checked
 
                 const url = `http://localhost:3000/users/${userId}/todos/${editedId}`

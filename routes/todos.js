@@ -26,7 +26,9 @@ module.exports = function (db) {
             if (startdate || enddate) {
                 params.deadline = {};
                 if (startdate) {
-                    params.deadline.$gte = new Date(startdate);
+                    const start = new Date(startdate);
+                    start.setHours(0, 0, 0, 0);
+                    params.deadline.$gte = start;
                 }
                 if (enddate) {
                     const end = new Date(enddate);
@@ -109,18 +111,26 @@ module.exports = function (db) {
 
     router.put('/:id', async function (req, res, next) {
         try {
-            const { id } = req.params
-            const _id = new ObjectId(id)
-            await Todo.updateOne({ _id }, { $set: req.body });
-            const todo = await Todo.findOne({ _id })
+            const { id } = req.params;
+            const _id = new ObjectId(id);
 
-            if (!todo) throw Error("Todo not exist!")
+            const updatedData = { ...req.body };
 
-            res.status(201).json(todo)
+            if (updatedData.deadline) {
+                updatedData.deadline = new Date(updatedData.deadline);
+            }
+
+            await Todo.updateOne({ _id }, { $set: updatedData });
+            const todo = await Todo.findOne({ _id });
+
+            if (!todo) throw Error("Todo not exist!");
+
+            res.status(201).json(todo);
         } catch (error) {
-            res.status(500).json({ message: error.message })
+            res.status(500).json({ message: error.message });
         }
-    })
+    });
+
 
     router.delete('/:id', async function (req, res, next) {
         try {
