@@ -29,6 +29,8 @@
         integrity="sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO"
         crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
 
 </head>
 
@@ -105,6 +107,7 @@
                 <div id="table-content">
 
                 </div>
+                <div class="scroll-sentinel"></div>
             </div>
         </div>
     </div>
@@ -173,196 +176,186 @@
 
     <script>
         const pathParts = window.location.pathname.split('/');
-        const userId = pathParts[2]
+        const userId = pathParts[2];
 
-        let deletedId = null
-        let editedId = null
+        let deletedId = null;
+        let editedId = null;
 
         let params = {
             sortBy: "_id",
             sortMode: "desc"
-        }
+        };
 
-        document.getElementById("insert-form").addEventListener("submit", function (e) {
-            e.preventDefault()
-            saveData()
-        })
+        const formModal = new bootstrap.Modal('#formModal', { keyboard: false });
+        const deleteModal = new bootstrap.Modal('#deleteModal', { keyboard: false });
 
-        document.getElementById("form-edit").addEventListener("submit", function (e) {
-            e.preventDefault()
-            saveData()
-        })
+        $('#insert-form').on('submit', function (e) {
+            e.preventDefault();
+            saveData();
+        });
+
+        $('#form-edit').on('submit', function (e) {
+            e.preventDefault();
+            saveData();
+        });
 
         const reset = () => {
-            document.getElementById('search-title').value = ""
-            document.getElementById('search-startdate').value = ""
-            document.getElementById('search-enddate').value = ""
-            document.getElementById('search-complete').value = ""
-            delete params.title
-            delete params.startdate
-            delete params.enddate
-            delete params.complete
+            $('#search-title').val("");
+            $('#search-startdate').val("");
+            $('#search-enddate').val("");
+            $('#search-complete').val("");
+            delete params.title;
+            delete params.startdate;
+            delete params.enddate;
+            delete params.complete;
 
-            console.log(params)
-            loadData()
-        }
+            loadData();
+        };
 
         const searching = () => {
-            const title = document.getElementById('search-title').value.trim()
-            const startdate = document.getElementById('search-startdate').value
-            const enddate = document.getElementById('search-enddate').value
-            const complete = document.getElementById('search-complete').value
+            const title = $('#search-title').val().trim();
+            const startdate = $('#search-startdate').val();
+            const enddate = $('#search-enddate').val();
+            const complete = $('#search-complete').val();
 
-            params = {
-                ...params, title: title, startdate: startdate, enddate: enddate, complete: complete
-            }
+            params = { ...params, title, startdate, enddate, complete };
 
-            console.log(params)
+            if (!title) delete params.title;
+            if (!startdate) delete params.startdate;
+            if (!enddate) delete params.enddate;
+            if (!complete) delete params.complete;
 
-            if (!title) delete params.title
-            if (!startdate) delete params.startdate
-            if (!enddate) delete params.enddate
-            if (!complete) delete params.complete
+            loadData();
+        };
 
-            loadData()
-        }
+        const loadData = () => {
+            const searchParams = new URLSearchParams(params).toString();
+            const url = `http://localhost:3000/users/${userId}/todos?${searchParams}`;
 
-        const loadData = async () => {
-            const searchParams = new URLSearchParams(params)
-            console.log(searchParams)
-            const url = `http://localhost:3000/users/${userId}/todos?${searchParams}`
+            $.ajax({
+                url,
+                method: 'GET',
+                dataType: 'json',
+                success: function (todos) {
+                    let html = '';
+                    const now = moment();
 
-            const response = await fetch(url, {
-                method: "GET",
-                headers: {
-                    "Accept": "application/json"
-                }
-            });
-            const todos = await response.json()
-            console.log(todos)
-            let html = '';
+                    todos.data.forEach(todo => {
+                        const deadline = moment(todo.deadline);
+                        let statusClass = "todo-pending";
 
-            todos.data.forEach(todo => {
-                const now = moment()
-                const deadline = moment(todo.deadline)
-                let statusClass = "todo-pending"
+                        if (todo.complete) {
+                            statusClass = "todo-done";
+                        } else if (deadline.isBefore(now)) {
+                            statusClass = "todo-overdue";
+                        }
 
-                if (todo.complete) {
-                    statusClass = "todo-done"
-                } else if (deadline.isBefore(now)) {
-                    statusClass = "todo-overdue"
-                }
-
-                html += `
-                    <div class="todo-item ${statusClass} d-flex justify-content-between align-items-center mb-3">
-                        ${deadline.format("DD-MM-YYYY HH:mm")} ${todo.title}
-                        <div>
-                            <button class="btn btn-sm" onclick="editData('${todo._id}')"><i class="fa-solid fa-pencil"></i></button>
-                            <button class="btn btn-sm" onclick="deletedData('${todo._id}')"><i class="fa-solid fa-trash"></i></button>
+                        html += `
+                        <div class="todo-item ${statusClass} d-flex justify-content-between align-items-center mb-3">
+                            ${deadline.format("DD-MM-YYYY HH:mm")} ${todo.title}
+                            <div>
+                                <button class="btn btn-sm" onclick="editData('${todo._id}')"><i class="fa-solid fa-pencil"></i></button>
+                                <button class="btn btn-sm" onclick="deletedData('${todo._id}')"><i class="fa-solid fa-trash"></i></button>
+                            </div>
                         </div>
-                    </div>
-                `;
+                    `;
+                    });
+
+                    $('#table-content').html(html);
+                    buildSortButton();
+                }
             });
+        };
 
-            buildSortButton()
-
-            document.getElementById("table-content").innerHTML = html;
-        }
-
-        const saveData = async () => {
-
+        const saveData = () => {
             if (editedId) {
-                const title = document.getElementById("title-edit").value
-                const deadline = moment(document.getElementById("deadline-edit").value).toISOString();
-                const complete = document.getElementById("complete-edit").checked
+                const title = $('#title-edit').val();
+                const deadline = moment($('#deadline-edit').val()).toISOString();
+                const complete = $('#complete-edit').is(':checked');
 
-                const url = `http://localhost:3000/users/${userId}/todos/${editedId}`
-
-                const response = await fetch(url, {
-                    method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({ title, deadline, complete })
-                })
-                document.getElementById("title-edit").value = ""
-                document.getElementById("deadline-edit").value = ""
-                document.getElementById("complete-edit").checked = false
-
-                formModal.hide()
-
+                $.ajax({
+                    url: `http://localhost:3000/users/${userId}/todos/${editedId}`,
+                    method: 'PUT',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ title, deadline, complete }),
+                    success: function () {
+                        $('#title-edit').val('');
+                        $('#deadline-edit').val('');
+                        $('#complete-edit').prop('checked', false);
+                        formModal.hide();
+                        editedId = null;
+                        loadData();
+                    }
+                });
             } else {
+                const title = $('#titleInput').val();
 
-                const title = document.getElementById("titleInput").value
-
-                const url = `http://localhost:3000/users/${userId}/todos`
-
-                const response = await fetch(url, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({ title })
-                })
-                document.getElementById("titleInput").value = ''
+                $.ajax({
+                    url: `http://localhost:3000/users/${userId}/todos`,
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ title }),
+                    success: function () {
+                        $('#titleInput').val('');
+                        loadData();
+                    }
+                });
             }
-            editedId = null
-            loadData()
-        }
+        };
 
         const deletedData = (id) => {
-            deletedId = id
-            deleteModal.show()
-        }
+            deletedId = id;
+            deleteModal.show();
+        };
 
-        const removeData = async () => {
-            const response = await fetch(`http://localhost:3000/users/${userId}/todos/${deletedId}`, {
-                method: "DELETE",
-            })
-            deletedId = null
-            loadData()
-            deleteModal.hide()
-        }
-
-        const editData = async (id) => {
-            editedId = id
-            const response = await fetch(`http://localhost:3000/users/${userId}/todos/${editedId}`, {
-                method: "GET",
-                headers: {
-                    "Accept": "application/json"
+        const removeData = () => {
+            $.ajax({
+                url: `http://localhost:3000/users/${userId}/todos/${deletedId}`,
+                method: 'DELETE',
+                success: function () {
+                    deletedId = null;
+                    loadData();
+                    deleteModal.hide();
                 }
-            })
-            const todo = await response.json()
-            document.getElementById("title-edit").value = todo.title
-            document.getElementById("deadline-edit").value = moment(todo.deadline).local().format('YYYY-MM-DDTHH:mm')
-            document.getElementById("complete-edit").checked = todo.complete === true
-            formModal.show()
-        }
+            });
+        };
+
+        const editData = (id) => {
+            editedId = id;
+            $.ajax({
+                url: `http://localhost:3000/users/${userId}/todos/${editedId}`,
+                method: 'GET',
+                dataType: 'json',
+                success: function (todo) {
+                    $('#title-edit').val(todo.title);
+                    $('#deadline-edit').val(moment(todo.deadline).local().format('YYYY-MM-DDTHH:mm'));
+                    $('#complete-edit').prop('checked', todo.complete === true);
+                    formModal.show();
+                }
+            });
+        };
 
         const sorting = (sortBy, sortMode) => {
-            params = { ...params, sortBy, sortMode }
-            loadData()
-        }
+            params = { ...params, sortBy, sortMode };
+            loadData();
+        };
 
         const buildSortButton = () => {
-            let html = ""
+            let html = `
+            <button type="button" class="btn btn-success px-4 d-flex align-items-center"
+                onclick="sorting('deadline', '${params.sortMode === "asc" ? "desc" : "asc"}')">
+                <i class="fa-solid fa-${params.sortBy === 'deadline' ? params.sortMode === 'asc' ? 'sort-up' : 'sort-down' : 'sort'} me-2"></i>
+                Sort by deadline
+            </button>
+        `;
+            $('#sort-button').html(html);
+        };
 
-            html += `
-                <button type="button" class="btn btn-success px-4 d-flex align-items-center"onclick="sorting('deadline', '${params.sortMode === "asc" ? "desc" : "asc"}')"><i class="fa-solid fa-${params.sortBy == 'deadline' ? params.sortMode == 'asc' ? 'sort-up' : 'sort-down' : 'sort'} me-2"></i> Sort by deadline</button>
-            `
-            document.getElementById("sort-button").innerHTML = html
-        }
-
-        const formModal = new bootstrap.Modal('#formModal', {
-            keyboard: false
-        })
-
-        const deleteModal = new bootstrap.Modal('#deleteModal', {
-            keyboard: false
-        })
-
-        loadData()
+        $(document).ready(function () {
+            loadData();
+        });
     </script>
+
 </body>
 
 </html>
