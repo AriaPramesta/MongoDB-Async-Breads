@@ -15,7 +15,9 @@ module.exports = function (db) {
         }
 
         try {
-            const { title, startdate, enddate, complete, sortMode = "asc", sortBy = "deadline", page = 1 } = req.query
+            const { title, startdate, enddate, complete, sortMode = "asc", sortBy = "deadline", page = "1" } = req.query
+
+            const pageInt = parseInt(page) || 1;
 
             let params = {}
 
@@ -49,14 +51,14 @@ module.exports = function (db) {
             const count = await Todo.countDocuments(params)
 
             const limit = 10
-            const offset = limit * (page - 1)
+            const offset = limit * (pageInt - 1)
             const pages = Math.ceil(count / limit)
 
             const sortParams = {}
             sortParams[sortBy] = sortMode === "asc" ? 1 : -1
 
             const todo = await Todo.find(params).limit(limit).skip(offset).sort(sortParams).toArray();
-            res.status(200).json({ data: todo, total: count, pages, page, limit })
+            res.status(200).json({ data: todo, total: count, pages, page: pageInt, limit })
         } catch (error) {
             res.status(500).json({ message: error.message })
         }
